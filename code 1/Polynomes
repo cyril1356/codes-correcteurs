@@ -1,0 +1,114 @@
+import numpy as np
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
+
+##a finir si j'ai le temps probléme sur la creation meme de poynomes de polynomes numpy ne le supporte pas 
+
+class Polynomes():###atttention ne pas mettre de zeros a la fin je pense que ca ne marche plus apres
+    ##attention la classe ne marche que dans F2
+
+    def __init__(self,liste):
+        if type(liste)==list:
+            self.poly=np.array(liste,dtype=object)
+        else: 
+            li=list(liste)
+            self.poly=np.array(li,dtype=object)
+
+    def addition(self,poly2):##attention on change pas la val
+        max_taillee=max(len(self.poly),len(poly2.poly))
+        min_taillee=min(len(self.poly),len(poly2.poly))
+        new=np.zeros(max_taillee)
+        for i in range (min_taillee):
+            if type(self.poly[i]) is Polynomes:
+                new[i]=self.poly[i].addition(poly2.poly[i])
+            else:
+                new[i]=self.poly[i]+poly2.poly[i]
+        if len(self.poly)==max_taillee:
+            for j in range (min_taillee,len(self.poly)):
+                new[j]=self.poly[j]
+        else:
+            
+            for j in range (min_taillee,len(poly2.poly)):
+                new[j]=poly2.poly[j]
+        return(Polynomes(new))
+
+    
+    
+    def decalage(self,i):
+        new=Polynomes(self.poly)
+        for j in range (i):
+            new.poly=np.concatenate((np.array([0]),self.poly))
+        return new
+
+
+
+    def multiplication(self,polynom:"Polynomes"):
+        new=Polynomes(self.poly)
+        retour=Polynomes(np.zeros(0))
+
+        for i in range (len(new.poly)):
+            if new.poly[i]==1:
+
+                retour=retour.addition(polynom)
+
+            polynom=polynom.decalage(1)
+        return(retour)
+        
+    def simplifie(self,poly_nul):##on simplifie notre polynome marche bien
+        relation=Polynomes(poly_nul[:-1])
+        for i in range (len(self.poly)):
+            if self.poly[i]%2==1:
+                self.poly[i]=1
+            else:
+                self.poly[i]=0
+        max_puissance=len(relation.poly)
+
+        new=Polynomes(self.poly[:max_puissance])
+
+        compteur=0
+        for i in range(max_puissance,len(self.poly)):
+
+            if self.poly[i]!=0:
+                new=new.addition(relation.decalage(compteur%max_puissance))
+            compteur+=1
+
+        for i in range (len(new.poly)):
+            if new.poly[i]%2==1:
+                new.poly[i]=1
+            else:
+                new.poly[i]=0
+
+        return(new)
+
+    @staticmethod
+    def multiplication_totale(sigma,relation):#on vas faire des polynomes de polynomes
+        res=Polynomes(np.array([]))
+        puissance_alpha=np.zeros(sigma[0])
+        puissance_alpha[-1]=1
+        res.poly=np.concatenate((res.poly,puissance_alpha))
+
+        for element in sigma: 
+            if element != sigma[0]:  
+                puissance_alpha=np.zeros(element)
+                puissance_alpha[-1]=1
+                res=res.multiplication(Polynomes(np.array([1,puissance_alpha])))
+        for element in res:
+            element.simplifie(relation)
+        
+        return(res)
+                
+
+
+
+print([1,2,3][:-1])
+polyn=Polynomes(np.array([1,0,0,1]))
+poly2=Polynomes(np.array([1,1]))
+print(polyn.addition(Polynomes(np.zeros(2))))
+
+print(polyn.multiplication(poly2))
+print(polyn.poly)
+polyn=Polynomes(np.array([1,0,0,1]))
+poly2=Polynomes(np.array([1,1]))
+poyn=polyn.simplifie([1,0,1])
+print(poyn.poly)
+print(Polynomes.multiplication_totale([1,3,4],[1,1,0,1]))
